@@ -1,0 +1,171 @@
+.card {
+  background: #0b0f1a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.tabs {
+  display: flex;
+  gap: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+  font-size: 15px;
+}
+
+.tabs button {
+  background: transparent;
+  border: none;
+  color: #8b94a7;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+
+.tabActive {
+  color: #fff !important;
+  font-weight: 700 !important;
+  border-bottom: 2px solid #3b82f6 !important;
+  padding-bottom: 16px !important;
+  margin-bottom: -17px;
+}
+
+.rowLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #8b94a7;
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+
+.maxBtn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #8b94a7;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.maxBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.select,
+.amount {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: #05070f;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.tokenIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: #2775ca;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  margin-right: 8px;
+}
+
+.select {
+  justify-content: flex-start;
+  gap: 4px;
+}
+
+.caret {
+  margin-left: auto;
+  color: #8b94a7;
+}
+
+.amount input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: inherit;
+  font-size: 28px;
+  font-weight: 700;
+  width: 100%;
+  font-family: inherit;
+}
+
+.amount span {
+  color: #8b94a7;
+  font-weight: 600;
+}
+
+.rows {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.rows p {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin: 10px 0;
+}
+
+.rows span {
+  color: #8b94a7;
+}
+
+.btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 12px;
+  border: none;
+  background: #3b82f6;
+  color: #fff;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  margin-top: 16px;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+
+.btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btnDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnApprove {
+  background: #f59e0b;
+}
+
+.btnDeposit {
+  background: #10b981;
+}
+
+.btnWithdraw {
+  background: #ef4444;
+}
+
+.error {
+  color: #ef4444;
+  font-size: 12px;
+  margin-top: 8px;
+}

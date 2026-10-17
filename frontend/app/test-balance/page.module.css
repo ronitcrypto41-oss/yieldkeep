@@ -1,0 +1,105 @@
+.page {
+  min-height: 100vh;
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  padding: 24px;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.black {
+  background: #05070f;
+  color: #ffffff;
+}
+
+.gray {
+  background: #f5f6f8;
+  color: #0a0a0a;
+}
+
+.white {
+  background: #ffffff;
+  color: #0a0a0a;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px 24px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  color: #000;
+  border-radius: 10px;
+  font-weight: 800;
+}
+
+.navLinks {
+  display: flex;
+  gap: 32px;
+  font-size: 14px;
+}
+
+.navLinks a {
+  color: #8b94a7;
+  text-decoration: none;
+}
+
+.navLinks a:hover {
+  color: #fff;
+}
+
+.navActive {
+  color: #fff !important;
+  font-weight: 600;
+}
+
+.main {
+  max-width: 520px;
+  margin: 60px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.themeSwitcher {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  display: flex;
+  gap: 6px;
+  background: #0b0f1a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 6px;
+  border-radius: 12px;
+}
+
+.themeSwitcher button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: #8b94a7;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.themeSwitcher button.activeTheme {
+  background: #3b82f6;
+  color: #fff;
+}
