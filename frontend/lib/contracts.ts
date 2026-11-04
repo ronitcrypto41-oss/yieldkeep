@@ -6,11 +6,11 @@
 export const CHAIN_ID = 84532;
 export const CHAIN_NAME = "Base Sepolia";
 
-// ─── Addresses ─────────────────────────────────────────────────
+// ─── Addresses (LATEST DEPLOYMENT: V3 with 10% performance fee) ─
 export const TREASURY_ADDRESS =
-  "0x3b4d249319473af8cc9eb1b1a94e83bfa17d27e8" as const;
+  "0x81f1d2d4B5F038FC3282c0F9BaC070cAd548094E" as const;
 export const ADAPTER_ADDRESS =
-  "0xe891272b97822d0e3c892e6dfac4ae9431cf8874" as const;
+  "0xEe4A77AAC5D3BaBD7B53A61e81aad1029D1BCA8d" as const;
 export const USDC_ADDRESS =
   "0x036cbd53842c5426634e7929541ec2318f3dcf7e" as const;
 
@@ -83,7 +83,7 @@ export const USDC_ABI = [
   },
 ] as const;
 
-// ─── Treasury ABI (DAOTreasuryYieldManagerV2) ──────────────────
+// ─── Treasury ABI (DAOTreasuryYieldManagerV3, same names as V2) ─
 export const TREASURY_ABI = [
   {
     type: "function",
@@ -197,6 +197,7 @@ export const TREASURY_ABI = [
     inputs: [
       { name: "caller", type: "address", indexed: true },
       { name: "amountDeployed", type: "uint256", indexed: false },
+      { name: "feePaid", type: "uint256", indexed: false },
     ],
   },
 ] as const;
