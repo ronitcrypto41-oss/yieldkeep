@@ -6,11 +6,13 @@
 export const CHAIN_ID = 84532;
 export const CHAIN_NAME = "Base Sepolia";
 
-// ─── Addresses (LATEST DEPLOYMENT: V3 with 10% performance fee) ─
+// ─── Addresses (LATEST DEPLOYMENT: V4, deployed at block 54777286) ─
+// V4 = 10% performance fee per treasury + partial withdraw. Fee wallet = Fees Safe.
+// Previous V3 vault (old, do not use): 0x81f1d2d4B5F038FC3282c0F9BaC070cAd548094E
 export const TREASURY_ADDRESS =
-  "0x81f1d2d4B5F038FC3282c0F9BaC070cAd548094E" as const;
+  "0xC064A4E028E77803fA86125b44a4491061c131c2" as const;
 export const ADAPTER_ADDRESS =
-  "0xEe4A77AAC5D3BaBD7B53A61e81aad1029D1BCA8d" as const;
+  "0xD1F5615162594EDe5Ab79d824fE7C57729E51542" as const;
 export const USDC_ADDRESS =
   "0x036cbd53842c5426634e7929541ec2318f3dcf7e" as const;
 
@@ -83,7 +85,7 @@ export const USDC_ABI = [
   },
 ] as const;
 
-// ─── Treasury ABI (DAOTreasuryYieldManagerV3, same names as V2) ─
+// ─── Treasury ABI (DAOTreasuryYieldManagerV4, same names as V3 + withdrawAmount) ─
 export const TREASURY_ABI = [
   {
     type: "function",
@@ -167,6 +169,22 @@ export const TREASURY_ABI = [
     name: "withdraw",
     stateMutability: "nonpayable",
     inputs: [],
+    outputs: [],
+  },
+  // V4: take out PART of a position (amount in USDC, 6 decimals)
+  {
+    type: "function",
+    name: "withdrawAmount",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "amount", type: "uint256" }],
+    outputs: [],
+  },
+  // V4: anyone can settle a treasury's yearly fee once its date has passed
+  {
+    type: "function",
+    name: "settle",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "user", type: "address" }],
     outputs: [],
   },
   // ─── Events ────────────────────────────────────────────────

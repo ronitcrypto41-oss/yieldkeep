@@ -8,6 +8,7 @@ import { useMergedEvents } from "@/lib/use-merged-events";
 import { usePnlHistory } from "@/lib/use-pnl-history";
 import { ChartStyles, AddressAvatar, PnlLine, type Range } from "@/app/components/yk-pnl";
 import { FeeCard } from "@/app/components/FeeCard";
+import { AgreementYieldCard } from "@/app/components/AgreementYieldCard";
 import { useFeeEvents, useFeeInfo } from "@/lib/use-fee";
 import { downloadReportPdf } from "@/lib/report-pdf";
 import {
@@ -248,7 +249,7 @@ export default function DashboardPage() {
       );
     } catch (err) {
       console.error(err);
-      window.alert("Could not create the PDF. In the frontend folder run: npm install jspdf jspdf-autotable --legacy-peer-deps");
+      window.alert("Could not create the PDF. In the frontend folder run: npm install jspdf jspdf-autotable");
     } finally {
       setPdfBusy(false);
     }
@@ -348,7 +349,7 @@ export default function DashboardPage() {
         </span>
       </div>
 
-      {/* ---------- ONE graph: your Net PnL line + gains/losses ring + harvests ---------- */}
+      {/* ---------- YOUR treasury: PnL line, report ---------- */}
       <div className="card" style={{ marginBottom: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <h2 className="card-title" style={{ margin: 0 }}>
@@ -411,7 +412,6 @@ export default function DashboardPage() {
               <div className="row"><span>Last activity</span><b>{fmtDate(mine?.last ?? 0)}</b></div>
               <div className="row"><span>Transactions</span><b className="num">{mine?.count ?? 0}</b></div>
             </div>
-
             {harvests.length > 0 && (
               <div style={{ marginTop: 16 }}>
                 <div className="yk-sub" style={{ marginBottom: 6 }}>
@@ -430,7 +430,6 @@ export default function DashboardPage() {
                 ))}
               </div>
             )}
-
             <p className="fee-note">
               Net PnL = current position value + withdrawals − deposits. A fee already deducted at withdrawal is included. A fee still open on a current position is shown in the fee card below.
               {USES_MOCK_ADAPTER ? " On this testnet the yield source is a mock adapter, so figures are simulated." : ""}
@@ -447,8 +446,9 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* ---------- fee: profit, 10% fee, what you keep, every deduction ---------- */}
+      {/* ---------- fee: profit, 10% fee, what you keep ---------- */}
       <FeeCard estimatePnl={netPnl} fees={fees} feesLoaded={feesLoaded} />
+      <AgreementYieldCard />
 
       {/* ---------- your recent transactions ---------- */}
       <div className="card" style={{ marginBottom: 24 }}>
