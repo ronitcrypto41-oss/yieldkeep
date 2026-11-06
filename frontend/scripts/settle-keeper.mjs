@@ -10,15 +10,22 @@
 //
 // Run it from the "frontend" folder. It reads PRIVATE_KEY from the root .env (only needed for --send).
 
-import { createPublicClient, createWalletClient, http, parseAbi, parseAbiItem, formatUnits } from "viem";
+import { createPublicClient, createWalletClient, http, fallback, parseAbi, parseAbiItem, formatUnits } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
 
 // ─── settings ───────────────────────────────────────────────
 const VAULT = "0xC064A4E028E77803fA86125b44a4491061c131c2";
 const DEPLOY_BLOCK = 54777286n; // first block of the vault
-const RPC = process.env.KEEPER_RPC_URL || "https://sepolia.base.org";
-const CHUNK = 5000n; // blocks per log request (public RPCs limit this)
+// Several free RPC addresses: if one refuses a request, the next one is tried.
+// (Optional: put your own in .env as KEEPER_RPC_URL and it is tried first.)
+const RPCS = [
+  process.env.KEEPER_RPC_URL,
+  "https://base-sepolia-rpc.publicnode.com",
+  "https://sepolia.base.org",
+].filter(Boolean);
+const transport = () => fallback(RPCS.map((u) => http(u, { retryCount: 2, timeout: 20_000 })));
+const CHUNK = 2000n; // blocks per log request (free RPCs limit this)
 const SEND = process.argv.includes("--send");
 
 const vaultAbi = parseAbi([
@@ -36,7 +43,7 @@ const usdc = (v) => Number(formatUnits(v, 6)).toFixed(4);
 const day = (s) => new Date(Number(s) * 1000).toISOString().slice(0, 10);
 
 async function main() {
-  const publicClient = createPublicClient({ chain: baseSepolia, transport: http(RPC) });
+  const publicClient = createPublicClient({ chain: baseSepolia, transport: transport() });
 
   // 1) every wallet that ever deposited (read from Deposit events)
   const latest = await publicClient.getBlockNumber();
@@ -83,7 +90,7 @@ async function main() {
   if (!pk) throw new Error("PRIVATE_KEY is missing in the .env file");
   if (!pk.startsWith("0x")) pk = "0x" + pk;
   const account = privateKeyToAccount(pk);
-  const walletClient = createWalletClient({ account, chain: baseSepolia, transport: http(RPC) });
+  const walletClient = createWalletClient({ account, chain: baseSepolia, transport: transport() });
   console.log(`Sending from ${account.address}\n`);
 
   for (const { user } of due) {
@@ -102,5 +109,7 @@ async function main() {
 
 main().catch((e) => {
   console.error("Keeper error:", e.shortMessage || e.message);
+  const why = e.details || e.cause?.details || e.cause?.message;
+  if (why) console.error("Reason:", why);
   process.exit(1);
 });
