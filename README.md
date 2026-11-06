@@ -1,5 +1,7 @@
 # YieldKeep
 
+[![CI](https://github.com/ronitcrypto41-oss/yieldkeep/actions/workflows/test.yml/badge.svg)](https://github.com/ronitcrypto41-oss/yieldkeep/actions)
+
 **Non-custodial USDC treasury vault for DAOs, on Base.**
 Idle treasury funds earn yield through Aave. YieldKeep charges a fair fee: **10% of profit only**, per treasury, never on the deposit.
 
@@ -53,7 +55,7 @@ Aave V3 on Base Sepolia has no USDC market, so the testnet uses a **mock adapter
 forge test
 ```
 
-**94 tests across 24 suites, 0 failing.** This includes the fee tests for V3 (17) and V4 (28): independent treasuries, late joiners, losses and recoveries, missed years, the fee wallet change, total loss, and nine partial-withdraw cases. Older suites cover reentrancy, donation attacks and protocol failure on V2.
+**94 tests across 24 suites, 0 failing.** GitHub Actions builds the contracts and runs all tests on every push. This includes the fee tests for V3 (17) and V4 (28): independent treasuries, late joiners, losses and recoveries, missed years, the fee wallet change, total loss, and nine partial-withdraw cases. Older suites cover reentrancy, donation attacks and protocol failure on V2.
 
 `legacy_tests/` holds early experiments (the first ETH bank and mainnet-fork tests). They are not run, and the fork tests will return for the mainnet step.
 
