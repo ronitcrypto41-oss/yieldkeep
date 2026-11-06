@@ -40,154 +40,91 @@ contract DAOTreasuryYieldManagerV2AaveIntegrationTest is Test {
             adapter
         );
 
-        adapter.setTreasury(
-            address(treasury)
-        );
+        adapter.setTreasury(address(treasury));
 
         alice = makeAddr("alice");
 
-        usdc.mint(
-            alice,
-            1000
-        );
+        usdc.mint(alice, 1000);
 
-        usdc.mint(
-            address(pool),
-            10000
-        );
+        usdc.mint(address(pool), 10000);
     }
 
     function test_DepositThroughRealTreasuryAndAaveAdapter() public {
         vm.startPrank(alice);
 
-        usdc.approve(
-            address(treasury),
-            100
-        );
+        usdc.approve(address(treasury), 100);
 
         treasury.deposit(100);
 
         vm.stopPrank();
 
-        assertEq(
-            treasury.shares(alice),
-            100
-        );
+        // deposit() only holds the USDC. harvest() sends it to Aave.
+        treasury.harvest();
 
-        assertEq(
-            treasury.totalShares(),
-            100
-        );
+        assertEq(treasury.shares(alice), 100);
 
-        assertEq(
-            treasury.totalAssets(),
-            100
-        );
+        assertEq(treasury.totalShares(), 100);
 
-        assertEq(
-            adapter.totalAssets(),
-            100
-        );
+        assertEq(treasury.totalAssets(), 100);
 
-        assertEq(
-            aToken.balanceOf(address(adapter)),
-            100
-        );
+        assertEq(adapter.totalAssets(), 100);
 
-        assertEq(
-            usdc.balanceOf(address(treasury)),
-            0
-        );
+        assertEq(aToken.balanceOf(address(adapter)), 100);
+
+        assertEq(usdc.balanceOf(address(treasury)), 0);
     }
 
     function test_YieldThroughAaveReachesTreasuryAccounting() public {
         vm.startPrank(alice);
 
-        usdc.approve(
-            address(treasury),
-            100
-        );
+        usdc.approve(address(treasury), 100);
 
         treasury.deposit(100);
 
         vm.stopPrank();
 
-        assertEq(
-            treasury.totalAssets(),
-            100
-        );
+        // deposit() only holds the USDC. harvest() sends it to Aave.
+        treasury.harvest();
 
-        aToken.addYield(
-            address(adapter),
-            20
-        );
+        assertEq(treasury.totalAssets(), 100);
 
-        assertEq(
-            adapter.totalAssets(),
-            120
-        );
+        aToken.addYield(address(adapter), 20);
 
-        assertEq(
-            treasury.totalAssets(),
-            120
-        );
+        assertEq(adapter.totalAssets(), 120);
 
-        assertEq(
-            treasury.shares(alice),
-            100
-        );
+        assertEq(treasury.totalAssets(), 120);
 
-        assertEq(
-            treasury.totalShares(),
-            100
-        );
+        assertEq(treasury.shares(alice), 100);
+
+        assertEq(treasury.totalShares(), 100);
     }
 
     function test_WithdrawThroughTreasuryAndAave() public {
         vm.startPrank(alice);
 
-        usdc.approve(
-            address(treasury),
-            100
-        );
+        usdc.approve(address(treasury), 100);
 
         treasury.deposit(100);
 
-        uint256 aliceBalanceBefore =
-            usdc.balanceOf(alice);
+        // deposit() only holds the USDC. harvest() sends it to Aave.
+        treasury.harvest();
+
+        uint256 aliceBalanceBefore = usdc.balanceOf(alice);
 
         treasury.withdraw();
 
         vm.stopPrank();
 
-        assertEq(
-            usdc.balanceOf(alice),
-            aliceBalanceBefore + 100
-        );
+        assertEq(usdc.balanceOf(alice), aliceBalanceBefore + 100);
 
-        assertEq(
-            treasury.shares(alice),
-            0
-        );
+        assertEq(treasury.shares(alice), 0);
 
-        assertEq(
-            treasury.totalShares(),
-            0
-        );
+        assertEq(treasury.totalShares(), 0);
 
-        assertEq(
-            treasury.totalAssets(),
-            0
-        );
+        assertEq(treasury.totalAssets(), 0);
 
-        assertEq(
-            adapter.totalAssets(),
-            0
-        );
+        assertEq(adapter.totalAssets(), 0);
 
-        assertEq(
-            aToken.balanceOf(address(adapter)),
-            0
-        );
+        assertEq(aToken.balanceOf(address(adapter)), 0);
     }
 }

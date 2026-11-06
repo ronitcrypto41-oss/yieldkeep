@@ -18,4 +18,7 @@ docs/
 .env
 .env.*
 !.env.example
-.env
+
+# Not part of YieldKeep: Foundry's own source code and an empty folder
+/foundry/
+/evn/

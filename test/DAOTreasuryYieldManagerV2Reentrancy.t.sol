@@ -111,6 +111,10 @@ contract DAOTreasuryYieldManagerV2ReentrancyTest is Test {
 
         treasury.deposit(100);
 
+        // deposit() only holds the USDC. harvest() sends it to the yield protocol,
+        // so withdraw() has to pull it back out (two token transfers = two re-entry tries).
+        treasury.harvest();
+
         assertEq(
             treasury.shares(address(this)),
             100

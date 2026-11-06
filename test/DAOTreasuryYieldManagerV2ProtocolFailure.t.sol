@@ -46,6 +46,9 @@ contract DAOTreasuryYieldManagerV2ProtocolFailureTest is Test {
 
         vm.stopPrank();
 
+        // deposit() only holds the USDC. harvest() sends it to the yield protocol.
+        treasury.harvest();
+
         assertEq(
             treasury.shares(alice),
             100
