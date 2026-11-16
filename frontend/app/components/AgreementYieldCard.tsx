@@ -67,7 +67,7 @@ export function AgreementYieldCard() {
       <p className="yk-sub">These rules are written in the vault contract. Nobody can change them for your treasury.</p>
 
       <div className="row"><span>Fee</span><b>10% of profit only, never of your deposit</b></div>
-      <div className="row"><span>When it is charged</span><b>Once a year on your own date, and when you withdraw</b></div>
+      <div className="row"><span>When it is charged</span><b>Once a year on your own date, and always when you withdraw (even part)</b></div>
       <div className="row"><span>No profit</span><b>No fee. A loss never creates a fee.</b></div>
       <div className="row">
         <span>Withdraw</span>
@@ -100,7 +100,7 @@ export function AgreementYieldCard() {
           This vault version cannot show exact numbers yet. They appear on the new vault version.
         </p>
       ) : !hasPosition && !wait ? (
-        <p className="empty" style={{ margin: "8px 0 0 0" }}>No deposit yet. Your numbers appear here after your first deposit.</p>
+        <p className="empty" style={{ margin: "8px 0 0 0" }}>No open position right now. Your numbers appear here when you have funds in the vault.</p>
       ) : (
         <>
           <div className="yk-sum" style={{ marginTop: 10 }}>

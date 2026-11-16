@@ -4,6 +4,7 @@
 // summary, fee deductions, transactions, and the YieldKeep tagline at the bottom of every page.
 // Text is kept to plain ASCII on purpose: the built-in PDF font cannot draw symbols like "−" or "→".
 
+import { LOGO_DATA_URL } from "@/lib/logo-data";
 import { checkDownload, newReportId, recordReportDownload, roleOf } from "@/lib/report-usage";
 
 export type ReportRow = { label: string; value: string; tone?: "pos" | "neg" };
@@ -40,14 +41,20 @@ const RULE: RGB = [221, 214, 197];
 const BLUE: RGB = [37, 99, 235];
 const GREEN: RGB = [22, 128, 61];
 const RED: RGB = [200, 30, 30];
+void WARM;
 
 const shortHash = (h: string) => (h.length > 18 ? `${h.slice(0, 10)}...${h.slice(-6)}` : h);
 const shortAddr = (a: string) => (a.length > 14 ? `${a.slice(0, 6)}...${a.slice(-4)}` : a);
 
-/** The YieldKeep mark: a blue rounded square with a white Y (drawn as vectors, so it is always sharp). */
+/** The YieldKeep mark: the exact logo image (embedded in lib/logo-data.ts). Falls back to a drawn Y if it fails. */
 function drawMark(doc: any, x: number, y: number, size: number, outline = false) {
+  try {
+    doc.addImage(LOGO_DATA_URL, "PNG", x, y, size, size);
+    return;
+  } catch {
+    // fall through to the drawn version
+  }
   if (outline) {
-    // watermark version: blue outline and blue Y, so the letter stays visible when it is faint
     doc.setDrawColor(...BLUE);
     doc.setLineWidth(size * 0.035);
     doc.roundedRect(x, y, size, size, size * 0.24, size * 0.24, "S");
@@ -110,9 +117,9 @@ export async function downloadReportPdf(d: ReportData, filename: string): Promis
     doc.rect(6, 6, W - 12, H - 12, "S");
     doc.setLineWidth(0.12);
     doc.rect(7.6, 7.6, W - 15.2, H - 15.2, "S");
-    // faint watermark in the middle
+    // faint watermark in the middle: the exact logo plus the wordmark
     doc.saveGraphicsState();
-    doc.setGState(new doc.GState({ opacity: 0.075, "stroke-opacity": 0.075 }));
+    doc.setGState(new doc.GState({ opacity: 0.09, "stroke-opacity": 0.09 }));
     drawMark(doc, W / 2 - 30, H / 2 - 52, 60, true);
     const wmWidth = (() => {
       doc.setFont("helvetica", "bold");

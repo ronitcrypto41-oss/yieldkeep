@@ -233,7 +233,10 @@ export default function DepositPage() {
       <div className="dash-head">
         <div>
           <h1 className="dash-title">Deposit USDC</h1>
-          <p className="dash-sub">Deposit USDC into the YieldKeep vault. Funds are routed to Aave V3 on Base Sepolia.</p>
+          <p className="dash-sub">
+            Deposit USDC into the YieldKeep vault. Funds are routed through the configured yield adapter on Base Sepolia.
+            {USES_MOCK_ADAPTER ? " Testnet: the adapter is a mock with simulated yield. Aave V3 is planned for mainnet." : ""}
+          </p>
         </div>
       </div>
 
@@ -322,10 +325,18 @@ export default function DepositPage() {
             <h2 className="card-title">How it works</h2>
             <div className="row"><span>1. Approve USDC for the vault</span><b>✓</b></div>
             <div className="row"><span>2. Deposit into the vault</span><b>✓</b></div>
-            <div className="row"><span>3. Vault routes funds to Aave V3</span><b>✓</b></div>
+            <div className="row"><span>3. Vault routes funds through the yield adapter</span><b>✓</b></div>
+            <div className="row">
+              <span>Current adapter</span>
+              <b>{USES_MOCK_ADAPTER ? "Mock (testnet, simulated yield)" : "Aave V3"}</b>
+            </div>
+            <div className="row">
+              <span>Production adapter</span>
+              <b>Aave V3 (planned)</b>
+            </div>
             <p className="fee-note" style={{ marginTop: 16 }}>
-              Only 10% of recorded yield is charged as a performance fee. There is no management fee.
-              {USES_MOCK_ADAPTER && " On this testnet demo the yield is simulated."}
+              Only 10% of profit is charged as a performance fee, settled once a year per treasury. There is no management fee.
+              {USES_MOCK_ADAPTER && " On this testnet demo the yield is simulated and no real funds are used."}
             </p>
           </div>
 
@@ -333,7 +344,7 @@ export default function DepositPage() {
             <h2 className="card-title">Vault stats</h2>
             <div className="row"><span>Vault TVL</span><b className="num">{ta === undefined ? "—" : `${formatUSDC(ta)} USDC`}</b></div>
             <div className="row"><span>Management fee</span><b>0%</b></div>
-            <div className="row"><span>Performance fee</span><b>10% of yield</b></div>
+            <div className="row"><span>Performance fee</span><b>10% of profit</b></div>
           </div>
         </div>
       </div>

@@ -9,6 +9,7 @@ import { usePnlHistory } from "@/lib/use-pnl-history";
 import { ChartStyles, AddressAvatar, PnlLine, type Range } from "@/app/components/yk-pnl";
 import { FeeCard } from "@/app/components/FeeCard";
 import { AgreementYieldCard } from "@/app/components/AgreementYieldCard";
+import { YieldHealthCard } from "@/app/components/YieldHealthCard";
 import { useFeeEvents, useFeeInfo } from "@/lib/use-fee";
 import { downloadReportPdf } from "@/lib/report-pdf";
 import {
@@ -37,7 +38,10 @@ const fmtDate = (ms: number) =>
     ? new Date(ms).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
     : "—";
 
-const signed = (v: bigint) => `${v > 0n ? "+" : v < 0n ? "−" : ""}${formatUSDC(v < 0n ? -v : v)}`;
+// differences under 0.01 USDC are rounding and count as break-even
+const TINY = 10_000n;
+const isTiny = (v: bigint) => v < TINY && v > -TINY;
+const signed = (v: bigint) => (isTiny(v) ? formatUSDC(0n) : `${v > 0n ? "+" : "−"}${formatUSDC(v < 0n ? -v : v)}`);
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
@@ -175,8 +179,12 @@ export default function DashboardPage() {
   const withdrawn = mine?.withdrawn ?? 0n;
   const netPnl = positionValue !== undefined ? positionValue + withdrawn - deposited : undefined;
   const netPnlPct =
-    netPnl !== undefined && deposited > 0n ? `${(Number((netPnl * 10000n) / deposited) / 100).toFixed(2)}%` : "—";
-  const pnlClass = netPnl === undefined ? "" : netPnl >= 0n ? "yk-pos" : "yk-neg";
+    netPnl !== undefined && deposited > 0n
+      ? isTiny(netPnl)
+        ? "0.00%"
+        : `${(Number((netPnl * 10000n) / deposited) / 100).toFixed(2)}%`
+      : "—";
+  const pnlClass = netPnl === undefined || isTiny(netPnl) ? "" : netPnl > 0n ? "yk-pos" : "yk-neg";
 
   const [range, setRange] = useState<Range>("ALL");
   const harvestRouted = harvests.reduce((s, h) => s + h.assets, 0n);
@@ -267,7 +275,7 @@ export default function DashboardPage() {
           <div className="yk-hero">
             <span className="yk-pill ok">● Base Sepolia</span>
             <span className={`yk-pill ${adapterPaused ? "bad" : "ok"}`}>{adapterPaused ? "Adapter paused" : "Adapter active"}</span>
-            <span className="yk-pill">Aave V3 · USDC</span>
+            <span className="yk-pill">{USES_MOCK_ADAPTER ? "Mock adapter" : "Aave V3 · USDC"}</span>
             {USES_MOCK_ADAPTER && <span className="yk-pill warn">Testnet · yield simulated</span>}
           </div>
         </div>
@@ -291,7 +299,9 @@ export default function DashboardPage() {
             <div>
               <div className="harvest-label">IDLE USDC IN VAULT</div>
               <div className="harvest-value">{formatUSDC(idleAssets as bigint)} USDC</div>
-              <div className="harvest-note">Route these funds into Aave V3 to put them to work.</div>
+              <div className="harvest-note">
+                Route these funds into {USES_MOCK_ADAPTER ? "the yield adapter (a mock on testnet)" : "Aave V3"} to put them to work.
+              </div>
             </div>
             <button
               className="btn-primary"
@@ -445,6 +455,9 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+
+      {/* ---------- yield health: earning / break-even / loss, rate estimate, where the money sits ---------- */}
+      <YieldHealthCard events={events} netPnl={netPnl} deposited={deposited} hasPosition={hasPosition} openFee={feeNow?.feeDue} />
 
       {/* ---------- fee: profit, 10% fee, what you keep ---------- */}
       <FeeCard estimatePnl={netPnl} fees={fees} feesLoaded={feesLoaded} />

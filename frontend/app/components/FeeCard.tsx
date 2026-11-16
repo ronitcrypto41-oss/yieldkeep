@@ -152,7 +152,7 @@ export function FeeCard({
 
       <p className="fee-note">
         {info
-          ? "The fee is charged once a year on your own date (365 days after your first deposit), and always when you withdraw everything. A loss is never charged, and a gain that only recovers an earlier loss is not charged twice."
+          ? "The fee is charged once a year on your own date (365 days after your first deposit), and always when you withdraw, even if you only take out part of your position (the fee on all open profit is settled first, then you receive your amount). A loss is never charged, and a gain that only recovers an earlier loss is not charged twice."
           : legacy
           ? "Estimate only: 10% of your current profit. The exact per-treasury fee starts on the new vault version."
           : ""}
