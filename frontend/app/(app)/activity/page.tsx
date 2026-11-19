@@ -488,7 +488,7 @@ export default function ActivityPage() {
             .reverse()
             .map((i) => ({
               date: stamp(i.timestamp),
-              type: i.kind === "harvest" ? "Harvest (vault)" : i.kind.charAt(0).toUpperCase() + i.kind.slice(1),
+              type: i.kind === "harvest" ? (USES_MOCK_ADAPTER ? "Harvest (vault, simulated)" : "Harvest (vault)") : i.kind.charAt(0).toUpperCase() + i.kind.slice(1),
               usdc: formatUSDC(i.assets),
               shares: i.kind === "harvest" ? "-" : formatUSDC(i.shares),
               tx: i.txHash,
@@ -607,7 +607,17 @@ export default function ActivityPage() {
                   <div key={keyOf(i)} className="act-row">
                     <span className={`act-icon k-${i.kind}`} aria-hidden>{KIND_ICON[i.kind]}</span>
                     <div className="act-body">
-                      <div className="act-title">{KIND_LABEL[i.kind]} {formatUSDC(i.assets)} USDC</div>
+                      <div className="act-title">
+                        {KIND_LABEL[i.kind]} {formatUSDC(i.assets)} USDC
+                        {i.kind === "harvest" && USES_MOCK_ADAPTER && (
+                          <span
+                            title="Testnet: this yield is simulated by a mock adapter, not paid by Aave."
+                            style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, padding: "2px 6px", borderRadius: 6, background: "rgba(245,158,11,0.18)", color: "#d97706" }}
+                          >
+                            Simulated
+                          </span>
+                        )}
+                      </div>
                       <div className="act-meta">
                         {fmtDate(i.timestamp)}
                         {i.kind !== "harvest" && <> · {formatUSDC(i.shares)} shares</>} · block {i.blockNumber.toString()}

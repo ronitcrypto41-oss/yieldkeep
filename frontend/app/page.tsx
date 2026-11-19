@@ -10,6 +10,10 @@ import { UsdcLogo, ManagementIcon, PerformanceIcon } from "@/app/components/FeeI
 // Set NEXT_PUBLIC_USES_MOCK_ADAPTER=false in .env.local only when a real adapter is live.
 const USES_MOCK_ADAPTER = process.env.NEXT_PUBLIC_USES_MOCK_ADAPTER !== "false";
 
+// Honest wording: on testnet the yield strategy is a mock adapter. Aave V3 is the plan for mainnet.
+const STRATEGY_SHORT = USES_MOCK_ADAPTER ? "Mock adapter" : "Aave V3";
+const STRATEGY_LONG = USES_MOCK_ADAPTER ? "a mock yield adapter (Aave V3 is planned for mainnet)" : "Aave V3 through an adapter";
+
 type Eip1193 = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
 };
@@ -200,12 +204,12 @@ const FAQS = [
   {
     q: "Where does the yield come from?",
     a: USES_MOCK_ADAPTER
-      ? "On this deployment the yield is simulated by a mock adapter. It is not paid by Aave and says nothing about real returns."
-      : "Yield comes from USDC supplied to the Aave V3 lending market. It varies and is not guaranteed.",
+      ? "On this deployment the yield is simulated by a mock adapter. It is not paid by Aave and says nothing about real returns. On mainnet the plan is Aave V3, where suppliers earn from borrowers' interest. It varies and is not guaranteed."
+      : "Yield comes from USDC supplied to the Aave V3 lending market, paid by borrowers' interest. It varies and is not guaranteed.",
   },
-  { q: "What is the YieldKeep fee?", a: "A 10% performance fee on yield and a 0% management fee, as set in the contract. Check the Fees card in the app before depositing." },
+  { q: "What is the YieldKeep fee?", a: "A 10% performance fee on profit only (never on your principal) and a 0% management fee, as set in the contract. The fee is also charged on a partial withdrawal. Check the Fees card in the app before depositing." },
   { q: "Is YieldKeep custodial?", a: "No. You hold vault shares and sign every deposit and withdrawal from your own wallet." },
-  { q: "Can I withdraw my treasury assets?", a: "Withdrawals depend on available liquidity in Aave V3 and can be delayed. The app supports full withdrawal only today." },
+  { q: "Can I withdraw my treasury assets?", a: "Yes. You can withdraw all or part of your position. With a real lending adapter, withdrawals depend on available liquidity and can be delayed." },
   { q: "Is it audited?", a: "No. The contracts have not been audited by a third party." },
   { q: "What assets are supported?", a: "USDC only, on Base Sepolia. Other assets may be considered later." },
   { q: "Where is it not offered?", a: "YieldKeep is not offered to US persons or in restricted jurisdictions. You are responsible for following the laws that apply to you." },
@@ -398,7 +402,7 @@ export default function LandingPage() {
                 A USDC treasury vault<br />for DAOs, <span className={c.accent}>verifiable onchain.</span>
               </h1>
               <p className={`text-sm md:text-base mb-8 max-w-lg leading-relaxed ${c.muted}`}>
-                A non-custodial vault that deposits USDC into Aave V3 through an adapter. Built for treasury contributors who need safety, transparency and reporting.
+                {`A non-custodial vault that deposits USDC into ${STRATEGY_LONG}. Built for treasury contributors who need safety, transparency and reporting.`}
               </p>
               <div className="flex flex-wrap gap-4 mb-8">
                 <button
@@ -414,7 +418,7 @@ export default function LandingPage() {
               </div>
               <div className={`flex flex-wrap gap-6 text-xs font-medium ${c.subtle}`}>
                 <span className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Non-custodial</span>
-                <span className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Aave V3 via adapter</span>
+                <span className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> {USES_MOCK_ADAPTER ? "Mock adapter (testnet)" : "Aave V3 via adapter"}</span>
                 <span className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Base Sepolia</span>
               </div>
             </div>
@@ -439,7 +443,7 @@ export default function LandingPage() {
               </div>
               <ul className={`space-y-3 text-sm ${c.muted}`}>
                 <li className="flex items-center gap-3"><span className={`${c.green} text-sm`}>●</span> Non-custodial vault architecture</li>
-                <li className="flex items-center gap-3"><span className={`${c.accent} text-sm`}>●</span> USDC supplied to Aave V3 through an adapter</li>
+                <li className="flex items-center gap-3"><span className={`${c.accent} text-sm`}>●</span> {USES_MOCK_ADAPTER ? "USDC held by a mock adapter with simulated yield (Aave V3 planned for mainnet)" : "USDC supplied to Aave V3 through an adapter"}</li>
                 <li className="flex items-center gap-3"><span className={`${isDark ? "text-purple-300" : "text-purple-700"} text-sm`}>●</span> Live values are read from the contracts inside the app</li>
               </ul>
             </div>
@@ -465,7 +469,7 @@ export default function LandingPage() {
               <div className={`w-12 h-12 rounded-full flex items-center justify-center ${c.chip}`}>
                 <AaveIcon id="aaveGradientStats" className="w-8 h-8" />
               </div>
-              <div><p className={`text-[11px] uppercase tracking-wider ${c.subtle}`}>Strategy</p><p className="font-bold text-sm">Aave V3</p></div>
+              <div><p className={`text-[11px] uppercase tracking-wider ${c.subtle}`}>Strategy</p><p className="font-bold text-sm">{STRATEGY_SHORT}</p></div>
             </div>
           </section>
         </ScrollReveal>
@@ -478,8 +482,8 @@ export default function LandingPage() {
             <div className="grid md:grid-cols-3 gap-6">
               {[
                 { n: "1", t: "Deposit USDC", d: "Approve and deposit USDC from your treasury wallet. You receive vault shares that represent your claim." },
-                { n: "2", t: "Vault supplies to Aave V3", d: "The vault passes USDC to a separate adapter contract, which supplies it to the Aave V3 USDC market." },
-                { n: "3", t: "Withdraw", d: "Redeem your shares for USDC. Withdrawals depend on available Aave liquidity and can be delayed." },
+                { n: "2", t: USES_MOCK_ADAPTER ? "Vault uses a yield adapter" : "Vault supplies to Aave V3", d: USES_MOCK_ADAPTER ? "The vault passes USDC to a separate adapter contract. On testnet this is a mock adapter with simulated yield. Aave V3 is planned for mainnet." : "The vault passes USDC to a separate adapter contract, which supplies it to the Aave V3 USDC market." },
+                { n: "3", t: "Withdraw", d: "Redeem all or part of your shares for USDC. With a real lending adapter, withdrawals depend on available liquidity and can be delayed." },
               ].map((s) => (
                 <div key={s.n} className={`border rounded-2xl p-6 ${c.card}`}>
                   <div className={`w-8 h-8 rounded-lg border flex items-center justify-center text-sm font-bold mb-4 ${c.divider} ${c.muted}`}>{s.n}</div>
@@ -501,7 +505,7 @@ export default function LandingPage() {
                 <h3 className="font-bold mb-4">Facts</h3>
                 <ul className={`space-y-3 text-sm ${c.muted}`}>
                   <li>Non-custodial: you hold vault shares and sign every transaction.</li>
-                  <li>Adapter boundary: all Aave interaction sits in a separate adapter contract.</li>
+                  <li>Adapter boundary: all yield-strategy interaction sits in a separate adapter contract.</li>
                   <li>Contract addresses and BaseScan links are listed on the app dashboard.</li>
                   <li><strong>Not audited.</strong> No third-party audit has been performed.</li>
                 </ul>
@@ -510,7 +514,7 @@ export default function LandingPage() {
                 <h3 className="font-bold mb-4">Risks</h3>
                 <ul className={`space-y-3 text-sm ${c.muted}`}>
                   <li>Smart contract and adapter bugs, including in unaudited code.</li>
-                  <li>Aave V3 protocol, oracle and governance risk.</li>
+                  <li>Aave V3 protocol, oracle and governance risk (applies once the Aave adapter is live on mainnet).</li>
                   <li>USDC issuer and depeg risk.</li>
                   <li>Withdrawal liquidity: redemptions can be delayed.</li>
                   <li>Testnet limits: simulated yield, no real funds, not representative of mainnet.</li>
@@ -554,12 +558,12 @@ export default function LandingPage() {
               <p className={`${c.accent} text-xs font-bold tracking-widest mb-3 uppercase`}>YieldKeep Vault</p>
               <h2 className="text-2xl md:text-3xl font-bold mb-4">Deposit USDC into the vault.</h2>
               <p className={`text-sm mb-8 leading-relaxed ${c.muted}`}>
-                Deposited USDC is routed through an adapter into Aave V3. Rates change over time and are shown as the rate at last read, never as a forecast.
+                {USES_MOCK_ADAPTER ? "Deposited USDC is routed through an adapter. On this testnet the adapter is a mock and the yield is simulated; Aave V3 is planned for mainnet. " : "Deposited USDC is routed through an adapter into Aave V3. "}Rates change over time and are shown as the rate at last read, never as a forecast.
               </p>
               <div className="space-y-4 mb-8">
                 {[
                   { k: "green", t: "Non-custodial architecture", d: "You hold vault shares and keep control of your deposits." },
-                  { k: "blue", t: "Aave V3 via adapter", d: "The Aave integration is isolated in a separate contract." },
+                  { k: "blue", t: USES_MOCK_ADAPTER ? "Yield adapter (mock on testnet)" : "Aave V3 via adapter", d: USES_MOCK_ADAPTER ? "The yield strategy is isolated in a separate contract. Aave V3 is planned for mainnet." : "The Aave integration is isolated in a separate contract." },
                   { k: "purple", t: "Onchain accounting", d: "Deposits, withdrawals and harvests are emitted as events you can verify." },
                 ].map((i) => (
                   <div key={i.t} className="flex items-start gap-3">
@@ -589,7 +593,7 @@ export default function LandingPage() {
                 <div className={`p-4 rounded-xl flex items-center justify-between ${c.inner}`}>
                   <div className="flex items-center gap-3">
                     <AaveIcon id="aaveGradient2" className="w-8 h-8" />
-                    <div><p className="font-semibold text-sm">Aave V3</p><p className={`text-[11px] ${c.subtle}`}>Lending market</p></div>
+                    <div><p className="font-semibold text-sm">{USES_MOCK_ADAPTER ? "Aave V3 (planned for mainnet)" : "Aave V3"}</p><p className={`text-[11px] ${c.subtle}`}>{USES_MOCK_ADAPTER ? "Not connected on testnet" : "Lending market"}</p></div>
                   </div>
                   <span className={`text-xs font-bold px-2 py-1 rounded ${USES_MOCK_ADAPTER ? c.warnChip : isDark ? "bg-green-500/20 text-green-300" : "bg-green-100 text-green-800"}`}>
                     {USES_MOCK_ADAPTER ? "Simulated" : "Active"}
