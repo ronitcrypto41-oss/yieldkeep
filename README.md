@@ -84,7 +84,17 @@ Aave V3 on Base Sepolia has no USDC market, so the testnet uses a **mock adapter
 forge test
 ```
 
-**94 tests across 24 suites, 0 failing.** GitHub Actions builds the contracts and runs all tests on every push. This includes the fee tests for V3 (17) and V4 (28): independent treasuries, late joiners, losses and recoveries, missed years, the fee wallet change, total loss, and nine partial-withdraw cases. Older suites cover reentrancy, donation attacks and protocol failure on V2.
+**94 unit tests across 24 suites, plus a fuzz and invariant suite (11 tests), 0 failing.** GitHub Actions builds the contracts and runs the tests on every push. The unit tests include the fee tests for V3 (17) and V4 (28): independent treasuries, late joiners, losses and recoveries, missed years, the fee wallet change, total loss, and nine partial-withdraw cases. Older suites cover reentrancy, donation attacks and protocol failure on V2.
+
+**Fuzz and invariant tests for V4** (`test/V4Fuzz.t.sol`):
+
+```bash
+forge test --match-path test/V4Fuzz.t.sol -vv
+```
+
+- **10 fuzz tests, 256 random runs each.** Each one checks one rule: a deposit then an instant withdraw never makes money, no profit means no fee, the fee is exactly 10% of profit and never touches principal, a loss never creates a fee, a partial withdraw pays exactly the amount asked and keeps the vault solvent, one treasury leaving never hurts another, the fee wallet is never charged, pause never blocks withdrawals, only the owner can change settings, and yearly settlement only works when due.
+- **4 invariants over 128,000 random calls** (deposits, withdrawals, yield and time jumps in random order): every share belongs to a known holder, the vault never owes more than it holds, total assets equal idle USDC plus what the adapter reports, and the dead shares are never touched.
+- **Limits of these tests:** they use the mock adapter (not real Aave), the mock USDC has 18 decimals (real USDC has 6), and the random invariant run adds yield but no losses (losses are covered by a separate fuzz test).
 
 `legacy_tests/` holds early experiments (the first ETH bank and mainnet-fork tests). They are not run, and the fork tests will return for the mainnet step.
 
@@ -129,6 +139,7 @@ Never commit `.env` files or private keys. They are git-ignored.
 - **Not audited.** Mainnet needs an independent audit first.
 - Testnet yield is simulated through a mock adapter.
 - The real Aave adapter still needs mainnet-fork tests.
+- Fuzz and invariant tests still need a 6-decimal USDC mock and a loss case inside the invariant run.
 - Withdrawals can be delayed if the yield protocol has low liquidity, and the adapter cannot be replaced after deployment.
 - Frontend history and some settings are stored in the browser only.
 - Next: Base mainnet pilot with the real Aave adapter, a 2-of-3 Safe as owner, a small deposit cap, a scheduled keeper, and monitoring.
