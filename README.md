@@ -40,7 +40,7 @@ A DAO or team treasury deposits USDC into the vault, and the vault routes it to 
 | USDC (Circle, Base Sepolia) | [`0x036CbD53842c5426634E7929541eC2318f3dCF7e`](https://sepolia.basescan.org/address/0x036CbD53842c5426634E7929541eC2318f3dCF7e) |
 | Fee wallet (Safe) | [`0x08362158F8E4e2Df757B8818C2fa0e1410afB3fe`](https://sepolia.basescan.org/address/0x08362158F8E4e2Df757B8818C2fa0e1410afB3fe) |
 
-Aave V3 on Base Sepolia has no USDC market, so the testnet uses a **mock adapter** and the yield is simulated (USDC is sent to the adapter). A real Aave adapter exists in `src/adapters/` for mainnet; it has not yet been tested on a mainnet fork.
+Aave V3 on Base Sepolia has no USDC market, so the testnet uses a **mock adapter** and the yield is simulated (USDC is sent to the adapter). A real Aave adapter exists in `src/adapters/` for mainnet. It is tested against real Aave V3 on a Base mainnet fork (see Tests), but it is not deployed on mainnet yet.
 
 ## Contract design (V4)
 
@@ -49,6 +49,7 @@ Aave V3 on Base Sepolia has no USDC market, so the testnet uses a **mock adapter
 - 1000 dead shares are locked on the first deposit (inflation-attack protection). The first depositor loses 0.001 USDC because of it.
 - Deposits are refused if the yield protocol has lost all assets while shares still exist, so nobody is diluted by worthless shares.
 - Changing the fee wallet does not charge the old fee wallet for the fee shares it already holds.
+- The Aave adapter has its own `pause()` (only its deployer can call it). It stops new deposits into Aave only. `withdraw()` can never be paused, and a test checks this.
 
 ## Admin and trust model (V4)
 
@@ -76,6 +77,7 @@ Aave V3 on Base Sepolia has no USDC market, so the testnet uses a **mock adapter
 - Unaudited. Testnet only. Yield is simulated by a mock adapter.
 - Withdrawals depend on available liquidity in the yield protocol. If it cannot return enough USDC, a withdrawal can fail until liquidity returns.
 - The adapter cannot be replaced after deployment.
+- Aave governance or its emergency admin can pause or freeze a reserve, which would delay withdrawals from Aave.
 - USDC is issued by Circle, which can blacklist addresses or pause USDC.
 
 ## Tests
@@ -84,7 +86,7 @@ Aave V3 on Base Sepolia has no USDC market, so the testnet uses a **mock adapter
 forge test
 ```
 
-**94 unit tests across 24 suites, plus a fuzz and invariant suite (11 tests), 0 failing.** GitHub Actions builds the contracts and runs the tests on every push. The unit tests include the fee tests for V3 (17) and V4 (28): independent treasuries, late joiners, losses and recoveries, missed years, the fee wallet change, total loss, and nine partial-withdraw cases. Older suites cover reentrancy, donation attacks and protocol failure on V2.
+**112 tests across 27 suites, 0 failing:** 94 unit tests, 11 fuzz and invariant tests, and 7 mainnet-fork tests. GitHub Actions builds the contracts and runs the tests on every push. The unit tests include the fee tests for V3 (17) and V4 (28): independent treasuries, late joiners, losses and recoveries, missed years, the fee wallet change, total loss, and nine partial-withdraw cases. Older suites cover reentrancy, donation attacks and protocol failure on V2.
 
 **Fuzz and invariant tests for V4** (`test/V4Fuzz.t.sol`):
 
@@ -96,7 +98,21 @@ forge test --match-path test/V4Fuzz.t.sol -vv
 - **4 invariants over 128,000 random calls** (deposits, withdrawals, yield and time jumps in random order): every share belongs to a known holder, the vault never owes more than it holds, total assets equal idle USDC plus what the adapter reports, and the dead shares are never touched.
 - **Limits of these tests:** they use the mock adapter (not real Aave), the mock USDC has 18 decimals (real USDC has 6), and the random invariant run adds yield but no losses (losses are covered by a separate fuzz test).
 
-`legacy_tests/` holds early experiments (the first ETH bank and mainnet-fork tests). They are not run, and the fork tests will return for the mainnet step.
+**Mainnet-fork tests** (`test/V4AaveFork.t.sol`): the V4 vault and the real `AaveYieldAdapter` run against real Aave V3 on Base. Foundry copies Base mainnet state into a local sandbox, so nothing is deployed and no real funds move.
+
+```bash
+forge test --match-path test/V4AaveFork.t.sol -vv
+```
+
+- USDC really moves into Aave (the aToken balance matches the deposit).
+- Real Aave interest builds up over 90 days, and the fee is exactly 10% of that profit.
+- Partial and full withdrawals work from Aave.
+- A deposit followed by an instant withdrawal creates no fee.
+- The adapter only accepts calls from the vault, and its treasury can be set only once.
+- Withdrawals still work when the adapter is paused. This test found a real bug: the adapter's pause used to block withdrawals, and it was fixed.
+- Limits: time is simulated with `vm.warp`, the test USDC comes from `deal`, and the public Base RPC is used by default (set `BASE_RPC_URL` to use your own).
+
+`legacy_tests/` holds early experiments (the first ETH bank and mainnet-fork tests). They are not run.
 
 ## Run it yourself
 
@@ -138,7 +154,7 @@ Never commit `.env` files or private keys. They are git-ignored.
 
 - **Not audited.** Mainnet needs an independent audit first.
 - Testnet yield is simulated through a mock adapter.
-- The real Aave adapter still needs mainnet-fork tests.
+- The real Aave adapter is fork-tested, but it is not deployed on mainnet and has not been audited.
 - Fuzz and invariant tests still need a 6-decimal USDC mock and a loss case inside the invariant run.
 - Withdrawals can be delayed if the yield protocol has low liquidity, and the adapter cannot be replaced after deployment.
 - Frontend history and some settings are stored in the browser only.
