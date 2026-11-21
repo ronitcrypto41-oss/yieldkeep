@@ -12,6 +12,8 @@ import {IAToken} from "../interfaces/IAToken.sol";
 /// @title AaveYieldAdapter
 /// @notice Routes USDC from the treasury into Aave V3 and back.
 ///         Only the treasury address can call deposit() and withdraw().
+///         pause() stops NEW deposits into Aave only. withdraw() can never be paused,
+///         so a paused adapter can never lock treasuries out of their money.
 contract AaveYieldAdapter is IYieldProtocol, Pausable {
     using SafeERC20 for IERC20;
 
@@ -63,6 +65,7 @@ contract AaveYieldAdapter is IYieldProtocol, Pausable {
         emit TreasurySet(_treasury);
     }
 
+    /// @notice Stops new deposits into Aave. Withdrawals keep working.
     function pause() external onlyDeployer {
         _pause();
     }
@@ -94,13 +97,13 @@ contract AaveYieldAdapter is IYieldProtocol, Pausable {
         emit Deposited(amount);
     }
 
+    /// @dev Deliberately NOT `whenNotPaused`: the adapter pause must never block withdrawals.
     function withdraw(
         uint256 amount
     )
         external
         override
         onlyTreasury
-        whenNotPaused
     {
         require(amount > 0, "Zero withdraw");
         require(totalAssets() >= amount, "Insufficient deposit");

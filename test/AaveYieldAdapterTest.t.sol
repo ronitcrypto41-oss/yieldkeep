@@ -310,16 +310,26 @@ contract AaveYieldAdapterTest is Test {
         treasury.deposit(100);
     }
 
-    function test_WithdrawRevertsWhenPaused() public {
+    // Pausing the adapter stops NEW deposits only. Treasuries can always get their money out.
+    function test_WithdrawStillWorksWhenPaused() public {
         treasury.deposit(100);
+
+        uint256 beforeBalance =
+            usdc.balanceOf(address(treasury));
 
         adapter.pause();
 
-        vm.expectRevert(
-            abi.encodeWithSignature("EnforcedPause()")
+        treasury.withdraw(100);
+
+        assertEq(
+            usdc.balanceOf(address(treasury)),
+            beforeBalance + 100
         );
 
-        treasury.withdraw(100);
+        assertEq(
+            adapter.totalAssets(),
+            0
+        );
     }
 
     function test_NonDeployerCannotPause() public {
