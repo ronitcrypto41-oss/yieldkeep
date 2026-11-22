@@ -114,6 +114,13 @@ forge test --match-path test/V4AaveFork.t.sol -vv
 
 `legacy_tests/` holds early experiments (the first ETH bank and mainnet-fork tests). They are not run.
 
+## Security review
+
+- **Static analysis:** I ran [Slither](https://github.com/crytic/slither) 0.11.6 on the whole project. It reported 50 results, and I reviewed each one. None is a real bug in the V4 vault or the Aave adapter. They are test mocks, old versions (V2, V3), practice contracts, or style notes. The "divide before multiply" result in the V4 fee calculation is intentional (it rounds down by dust, in favour of the treasury) and is covered by a fuzz test.
+- **Bug found by testing:** a fork test showed that the adapter's pause could block withdrawals. It was fixed, and a test now checks that withdrawals can never be paused.
+- **Reporting a bug:** see [SECURITY.md](SECURITY.md).
+- Slither and tests are not an audit. The project is still unaudited.
+
 ## Run it yourself
 
 Needs [Foundry](https://book.getfoundry.sh/) and Node 20+.
@@ -148,6 +155,7 @@ Never commit `.env` files or private keys. They are git-ignored.
 | `script/` | Deployment scripts |
 | `frontend/` | Next.js app (dashboard, deposit, withdraw, activity, PDF reports) and the keeper |
 | `legacy_tests/` | Early experiments, not run |
+| `SECURITY.md` | How to report a bug, scope, known risks |
 | `broadcast/` | Deployment logs |
 
 ## Known limits and next steps
