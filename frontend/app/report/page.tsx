@@ -2,16 +2,15 @@
 
 import { useEffect, useState } from "react";
 import {
-  createPublicClient,
+  decodeFunctionResult,
+  encodeFunctionData,
   erc20Abi,
-  fallback,
   formatUnits,
   getAddress,
-  http,
   isAddress,
   type Address,
+  type Hex,
 } from "viem";
-import { base, mainnet } from "viem/chains";
 
 // ---------------------------------------------------------------------------
 // Idle Funds Report
@@ -27,7 +26,6 @@ const SECONDS_PER_YEAR = 31_536_000;
 const CHAINS = {
   base: {
     label: "Base",
-    chain: base,
     rpcs: [
       "https://base-rpc.publicnode.com",
       "https://mainnet.base.org",
@@ -39,7 +37,6 @@ const CHAINS = {
   },
   ethereum: {
     label: "Ethereum",
-    chain: mainnet,
     rpcs: [
       "https://ethereum-rpc.publicnode.com",
       "https://eth.llamarpc.com",
@@ -113,33 +110,63 @@ function computeYield(idleUsdc: number, liquidityRateRay: bigint) {
   return { apr, apy, yearlyGross, yearlyFee, yearlyNet };
 }
 
+// A plain read-only call (eth_call) to a public server. It tries each server in
+// the list until one answers.
+async function ethCall(urls: readonly string[], to: Address, data: Hex): Promise<Hex> {
+  let lastError: unknown = new Error("No server answered");
+  for (const url of urls) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 12_000);
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "eth_call",
+          params: [{ to, data }, "latest"],
+        }),
+        signal: ctrl.signal,
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = (await res.json()) as { result?: string; error?: { message?: string } };
+      if (typeof json.result !== "string") {
+        throw new Error(json.error?.message ?? "Bad response");
+      }
+      return json.result as Hex;
+    } catch (e) {
+      lastError = e;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  throw lastError;
+}
+
+async function usdcBalance(urls: readonly string[], token: Address, owner: Address): Promise<bigint> {
+  const data = encodeFunctionData({ abi: erc20Abi, functionName: "balanceOf", args: [owner] });
+  const ret = await ethCall(urls, token, data);
+  return decodeFunctionResult({ abi: erc20Abi, functionName: "balanceOf", data: ret });
+}
+
 async function buildReport(chainKey: ChainKey, address: Address): Promise<Report> {
   const cfg = CHAINS[chainKey];
-  const client = createPublicClient({
-    chain: cfg.chain,
-    transport: fallback(cfg.rpcs.map((url) => http(url, { timeout: 12_000 }))),
-  });
 
-  const [idleRaw, earningRaw, reserve] = await Promise.all([
-    client.readContract({
-      address: cfg.usdc,
-      abi: erc20Abi,
-      functionName: "balanceOf",
-      args: [address],
-    }),
-    client.readContract({
-      address: cfg.aUsdc,
-      abi: erc20Abi,
-      functionName: "balanceOf",
-      args: [address],
-    }),
-    client.readContract({
-      address: cfg.pool,
-      abi: poolAbi,
-      functionName: "getReserveData",
-      args: [cfg.usdc],
-    }),
+  const [idleRaw, earningRaw, reserveRet] = await Promise.all([
+    usdcBalance(cfg.rpcs, cfg.usdc, address),
+    usdcBalance(cfg.rpcs, cfg.aUsdc, address),
+    ethCall(
+      cfg.rpcs,
+      cfg.pool,
+      encodeFunctionData({ abi: poolAbi, functionName: "getReserveData", args: [cfg.usdc] }),
+    ),
   ]);
+  const reserve = decodeFunctionResult({
+    abi: poolAbi,
+    functionName: "getReserveData",
+    data: reserveRet,
+  });
 
   const idleUsdc = Number(formatUnits(idleRaw, 6));
   const earningUsdc = Number(formatUnits(earningRaw, 6));
@@ -315,7 +342,12 @@ export default function IdleFundsReportPage() {
           <div className="ifr-card">
             <div className="ifr-lab">
               {CHAINS[report.chainKey].label} ·{" "}
-              <a href={CHAINS[report.chainKey].explorer + report.address} target="_blank" rel="noreferrer">
+              <a
+                href={CHAINS[report.chainKey].explorer + report.address}
+                target="_blank"
+                rel="noreferrer"
+                style={{ textTransform: "none" }}
+              >
                 {short(report.address)}
               </a>
             </div>
