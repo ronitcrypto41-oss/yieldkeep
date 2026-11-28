@@ -8,6 +8,8 @@ Idle treasury funds are routed through a yield adapter (Aave V3 is planned for m
 
 Demo video: https://youtu.be/8-z3BqnDLac
 
+**Free tool, live now:** the [Idle Funds Report](https://yieldkeep-nine.vercel.app/report). Paste any public wallet or Safe address on Base or Ethereum to see how much USDC sits idle and what Aave V3's current supply rate could pay per year. It is read-only, needs no wallet connection, and the result is an estimate from public data.
+
 ---
 
 ## What it does
@@ -30,6 +32,24 @@ A DAO or team treasury deposits USDC into the vault, and the vault routes it to 
 | How it is paid | As vault shares moved to the fee wallet, so no USDC has to leave the yield protocol at settlement. The fee wallet is never charged. |
 
 **Tested on Base Sepolia:** 30 USDC deposited, 3 USDC of simulated yield, first withdraw of 10 USDC. The vault took **0.30 USDC** (10% of the 3.00 profit) once, the treasury received the 10 USDC, and the final withdraw of the remaining 22.70 USDC charged no fee.
+
+## YieldKeep or Aave directly?
+
+If you only want yield, you can deposit USDC into Aave V3 yourself through your own Safe. That adds no fee on top of Aave. YieldKeep is for teams that want the accounting, reports and fixed rules around it.
+
+| Option | Cost | What you get | What you do yourself |
+|---|---|---|---|
+| Hold USDC idle | None | No yield, no added risk | Nothing |
+| Aave directly (your own Safe) | No fee on top of Aave | The same Aave yield | Set it up, track the profit, write the reports |
+| A managed treasury service | Usually a management fee plus a performance fee | Active management by people | Trust their decisions |
+| **YieldKeep** | 10% of profit only | The same Aave yield, per-treasury accounting, PDF and CSV reports, rules fixed in code | Nothing extra |
+
+**Example (estimate only, rates change every day):** $1,000,000 of USDC at about 2.7% a year earns $0 if it stays idle, about $27,000 a year in Aave directly, and about $24,300 a year through YieldKeep after the 10% profit fee.
+
+**Honest limits:**
+- YieldKeep earns the same Aave rate, minus its fee. It does not produce a better yield.
+- It is testnet only and unaudited.
+- It supports Base only. Treasuries held on Ethereum cannot use it yet.
 
 ## Deployed on Base Sepolia (testnet)
 
@@ -153,7 +173,7 @@ Never commit `.env` files or private keys. They are git-ignored.
 | `src/` | Vault contracts, adapters, mocks |
 | `test/` | Foundry tests |
 | `script/` | Deployment scripts |
-| `frontend/` | Next.js app (dashboard, deposit, withdraw, activity, PDF reports) and the keeper |
+| `frontend/` | Next.js app (dashboard, deposit, withdraw, activity, PDF reports, the free Idle Funds Report at `/report`) and the keeper |
 | `legacy_tests/` | Early experiments, not run |
 | `SECURITY.md` | How to report a bug, scope, known risks |
 | `broadcast/` | Deployment logs |
@@ -165,6 +185,7 @@ Never commit `.env` files or private keys. They are git-ignored.
 - The real Aave adapter is fork-tested, but it is not deployed on mainnet and has not been audited.
 - Fuzz and invariant tests still need a 6-decimal USDC mock and a loss case inside the invariant run.
 - Withdrawals can be delayed if the yield protocol has low liquidity, and the adapter cannot be replaced after deployment.
+- Base only. Many DAO treasuries are on Ethereum, so an Ethereum adapter is a possible later step.
 - Frontend history and some settings are stored in the browser only.
 - Next: Base mainnet pilot with the real Aave adapter, a 2-of-3 Safe as owner, a small deposit cap, a scheduled keeper, and monitoring.
 
